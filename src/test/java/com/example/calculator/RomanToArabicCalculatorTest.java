@@ -1,17 +1,22 @@
 package com.example.calculator;
 
 import com.example.converter.RomanToArabicConverter;
+import com.example.util.MathUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 //@MockitoSettings(strictness = Strictness.LENIENT)
@@ -24,6 +29,9 @@ class RomanToArabicCalculatorTest {
 
     @InjectMocks
     private RomanToArabicCalculator romanToArabicCalculator;
+
+    @Captor
+    private ArgumentCaptor<String> romanNumberCaptor;
 
     @BeforeEach
     void setUp() {
@@ -62,5 +70,36 @@ class RomanToArabicCalculatorTest {
 
         Assertions.assertThrows(IllegalArgumentException.class,
                 () -> romanToArabicCalculator.sum(romeNumber1, romeNumber2));
+    }
+
+    @Test
+    void sumUsingUtilClassCanUseUtilClassSinceItIsFinal() {
+        // does not work in the older versions of Mockito since final class
+        MathUtil mathUtilMock = Mockito.mock(MathUtil.class);
+
+        int actualSum = romanToArabicCalculator.sumUsingUtilClass(VALID_ROME_NUMBER, VALID_ROME_NUMBER);
+
+        Assertions.assertEquals(0, actualSum);
+    }
+
+    @Test
+    void sumShouldCallRomanToArabicConverterExpectedTimes() {
+        romanToArabicCalculator.sum(VALID_ROME_NUMBER, VALID_ROME_NUMBER);
+
+//        Mockito.verify(romanToArabicConverter).romanToArabic(VALID_ROME_NUMBER);
+        Mockito.verify(romanToArabicConverter, Mockito.times(2)).romanToArabic(VALID_ROME_NUMBER);
+    }
+
+    @Test
+    void exampleSumWithDefaultArgumentsShouldCallRomanToArabicConverterExpectedTimesWithExpectedParameterValue() {
+        romanToArabicCalculator.exampleSumWithDefaultArguments();
+
+        Mockito.verify(romanToArabicConverter, Mockito.times(2)).romanToArabic(romanNumberCaptor.capture());
+
+        List<String> romanNumberCaptorAllValues = romanNumberCaptor.getAllValues();
+
+        Assertions.assertFalse(romanNumberCaptorAllValues.isEmpty());
+        Assertions.assertEquals(VALID_ROME_NUMBER, romanNumberCaptorAllValues.get(0));
+        Assertions.assertEquals(VALID_ROME_NUMBER, romanNumberCaptorAllValues.get(1));
     }
 }
